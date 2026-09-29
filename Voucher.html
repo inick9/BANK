@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debit Voucher Generator</title>
+  <style>
+    :root {
+      --ink: #1d252f;
+      --muted: #5d6876;
+      --line: #cfd6df;
+      --paper: #ffffff;
+      --panel: #f5f7fa;
+      --accent: #22577a;
+      --accent-dark: #12364d;
+      --danger: #b42318;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #e9edf2;
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 14px;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: minmax(320px, 430px) minmax(520px, 1fr);
+      gap: 18px;
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    .controls {
+      align-self: start;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 12px 32px rgba(29, 37, 47, 0.08);
+    }
+
+    h1,
+    h2 {
+      margin: 0;
+      color: var(--ink);
+      letter-spacing: 0;
+    }
+
+    h1 {
+      font-size: 22px;
+      line-height: 1.25;
+    }
+
+    details {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 0 12px 12px;
+    }
+
+    summary {
+      padding-top: 12px;
+      color: var(--accent-dark);
+      cursor: pointer;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      font-size: 15px;
+      text-transform: uppercase;
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-height: 36px;
+      margin-top: 5px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px 10px;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 78px;
+      resize: vertical;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    button {
+      min-height: 38px;
+      border: 0;
+      border-radius: 6px;
+      padding: 9px 13px;
+      color: #fff;
+      background: var(--accent);
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    button:hover {
+      background: var(--accent-dark);
+    }
+
+    button.secondary {
+      color: var(--accent-dark);
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+
+    button.secondary:hover {
+      background: var(--panel);
+    }
+
+    .account-save {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      align-items: end;
+    }
+
+    .account-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .account-list {
+      width: 100%;
+      margin-top: 14px;
+      border-collapse: collapse;
+      background: #fff;
+      font-size: 13px;
+    }
+
+    .account-list th,
+    .account-list td {
+      border: 1px solid var(--line);
+      padding: 7px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .account-list th {
+      color: var(--accent-dark);
+      background: #eef2f6;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .account-list .table-actions {
+      width: 130px;
+      white-space: nowrap;
+    }
+
+    .account-list button {
+      min-height: 30px;
+      padding: 5px 8px;
+      font-size: 12px;
+    }
+
+    .empty-accounts {
+      margin-top: 12px;
+      color: var(--muted);
+    }
+
+    .narration-tools,
+    .utility-actions {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 8px;
+      align-items: end;
+      margin-top: 8px;
+    }
+
+    .utility-actions {
+      grid-template-columns: repeat(3, auto);
+      justify-content: start;
+    }
+
+    .validation-list {
+      margin: 8px 0 0;
+      padding-left: 18px;
+    }
+
+    .validation-list li {
+      margin-top: 4px;
+    }
+
+    .hidden-file {
+      display: none;
+    }
+
+    @media (max-width: 560px) {
+      .account-save,
+      .narration-tools,
+      .utility-actions {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .entry {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: var(--panel);
+    }
+
+    .entry-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 4px;
+      color: var(--accent-dark);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .message {
+      min-height: 20px;
+      margin-top: 10px;
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .preview-shell {
+      overflow: auto;
+      padding-bottom: 18px;
+    }
+
+    .voucher-page {
+      width: 794px;
+      min-height: 1123px;
+      margin: 0 auto;
+      padding: 46px 54px;
+      background: var(--paper);
+      box-shadow: 0 14px 40px rgba(29, 37, 47, 0.14);
+    }
+
+    .voucher {
+      min-height: 188px;
+      margin-bottom: 12px;
+      border: 1px solid #111;
+      color: #111;
+      font-family: "Times New Roman", Times, serif;
+      font-size: 15px;
+      line-height: 1.22;
+      page-break-inside: avoid;
+    }
+
+    .voucher-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 4px 8px 0;
+      font-weight: 700;
+    }
+
+    .voucher-title {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .voucher-id {
+      font-weight: 400;
+    }
+
+    .voucher-line {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 9px 8px 0;
+    }
+
+    .bank-name {
+      padding: 14px 8px 8px;
+      font-weight: 700;
+      font-size: 18px;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .voucher-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 210px;
+      border-top: 1px solid #111;
+    }
+
+    .voucher-cell {
+      padding: 4px 8px;
+      border-bottom: 1px solid #111;
+    }
+
+    .voucher-cell:nth-child(even) {
+      border-left: 1px solid #111;
+    }
+
+    .account-cell,
+    .branch-cell {
+      font-weight: 700;
+    }
+
+    .branch-cell {
+      text-align: center;
+    }
+
+    .narration-cell {
+      min-height: 54px;
+      white-space: pre-wrap;
+    }
+
+    .amount-cell,
+    .total-amount-cell {
+      text-align: right;
+      font-weight: 700;
+    }
+
+    .total-label-cell {
+      text-align: right;
+      font-weight: 700;
+    }
+
+    .words-cell {
+      grid-column: 1 / -1;
+      min-height: 57px;
+      border-bottom: 0;
+      font-weight: 700;
+    }
+
+    .signature-grid,
+    .prepared-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      font-family: "Times New Roman", Times, serif;
+      font-size: 16px;
+      border: 1px dotted #777;
+    }
+
+    .signature-grid {
+      margin-top: 8px;
+      font-weight: 700;
+    }
+
+    .signature-grid div,
+    .prepared-grid div {
+      min-height: 66px;
+      display: flex;
+      align-items: end;
+      justify-content: center;
+      padding: 0 8px 6px;
+    }
+
+    .signature-grid div:first-child,
+    .prepared-grid div:first-child {
+      border-right: 1px dotted #777;
+    }
+
+    .prepared-grid {
+      border-top: 0;
+    }
+
+    .placeholder {
+      display: grid;
+      place-items: center;
+      min-height: 1000px;
+      color: var(--muted);
+      border: 1px dashed var(--line);
+      text-align: center;
+    }
+
+    .site-footer {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 20px 18px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+      border-top: 1px solid var(--line);
+      background: rgba(245, 247, 250, 0.5);
+    }
+
+    .site-footer-content {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .site-footer-separator {
+      width: 1px;
+      height: 20px;
+      background: var(--line);
+    }
+
+    .site-footer a {
+      color: var(--accent-dark);
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .site-footer a:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    .site-footer-icon {
+      font-size: 16px;
+    }
+
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .preview-shell {
+        margin-inline: -18px;
+      }
+
+      .site-footer-content {
+        gap: 10px;
+      }
+
+      .site-footer-separator {
+        display: none;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .site-footer {
+        padding: 16px 12px;
+        font-size: 12px;
+      }
+
+      .site-footer-content {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .site-footer a {
+        font-size: 12px;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .controls {
+        display: none;
+      }
+
+      .site-footer {
+        display: none;
+      }
+
+      .app {
+        display: block;
+        padding: 0;
+      }
+
+      .preview-shell {
+        overflow: visible;
+        padding: 0;
+      }
+
+      .voucher-page {
+        width: 210mm;
+        min-height: 297mm;
+        box-shadow: none;
+        padding: 16mm 18mm;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="controls">
+      <h1>Bank Voucher Generator</h1>
+
+      <details>
+        <summary>Bank Setup</summary>
+
+        <label>Bank Name
+          <input id="bankName" value="YOUR BANK LTD." oninput="saveBankSetup()">
+        </label>
+
+        <label>Prepared By
+          <input id="preparedBy" value="JR. OFFICER" oninput="saveBankSetup()">
+        </label>
+
+        <label>Checked By
+          <input id="checkedBy" value="MANAGER" oninput="saveBankSetup()">
+        </label>
+      </details>
+	  
+      <details>
+        <summary>Account Setup</summary>
+        <h2>Add Account</h2>
+        <div class="account-save">
+          <label>Account Name
+            <input id="accName" placeholder="Account name">
+          </label>
+          <label>AC/BGL Number
+            <input id="accNo" placeholder="Account number">
+          </label>
+          <label>Branch
+            <input id="accBranch" placeholder="Branch name">
+          </label>
+        </div>
+        <div class="account-actions">
+          <button id="accountSaveButton" type="button" onclick="saveAccount()">Save Account</button>
+          <button id="accountCancelButton" class="secondary" type="button" onclick="cancelAccountEdit()" style="display: none;">Cancel Edit</button>
+        </div>
+        <div class="utility-actions">
+          <button class="secondary" type="button" onclick="exportAccounts()">Export Accounts</button>
+          <button class="secondary" type="button" onclick="document.getElementById('accountImportFile').click()">Import Accounts</button>
+          <input id="accountImportFile" class="hidden-file" type="file" accept="application/json,.json" onchange="importAccounts(this)">
+        </div>
+        <div id="accountList"></div>
+      </details>	  
+
+      <h2>Voucher Details</h2>
+      <div class="two-col">
+        <label>Voucher Date
+          <input id="voucherDate" type="date">
+        </label>
+        <label>Voucher Type
+          <select id="voucherType" onchange="renderEntries()">
+            <option value="1-1" selected>1 Debit, 1 Credit</option>
+            <option value="1-2">1 Debit, 2 Credit</option>
+            <option value="2-1">2 Debit, 1 Credit</option>
+            <option value="3-0">Only Debit</option>
+            <option value="0-3">Only Credit</option>
+          </select>
+        </label>
+      </div>
+
+      <label>Narration
+        <textarea id="commonNarration">Narration</textarea>
+      </label>
+      <div class="narration-tools">
+        <label>Narration Template
+          <select id="narrationTemplateSelect" onchange="applyNarrationTemplate()"></select>
+        </label>
+        <button class="secondary" type="button" onclick="saveNarrationTemplate()">Save Narration</button>
+        <button class="secondary" type="button" onclick="deleteNarrationTemplate()">Delete Narration</button>
+      </div>
+
+      <h2>Entries</h2>
+      <div id="entries"></div>
+      <datalist id="accountOptions"></datalist>
+
+      <div class="actions">
+        <button type="button" onclick="generateVoucher()">Generate Voucher</button>
+        <button class="secondary" type="button" onclick="duplicatePreviousVoucher()">Use Previous Voucher</button>
+        <button class="secondary" type="button" onclick="window.print()">Print</button>
+      </div>
+      <div id="message" class="message"></div>
+    </section>
+
+    <section class="preview-shell">
+      <div id="voucherOutput" class="voucher-page">
+        <div class="placeholder">Generate voucher to preview the A4 output.</div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-content">
+      <a href="https://www.instagram.com/INICK9/" target="_blank" rel="noopener" title="Follow on Instagram">
+        <span class="site-footer-icon">📱</span>
+        <span>Follow on Instagram</span>
+      </a>
+      <div class="site-footer-separator"></div>
+      <a href="https://inick99.github.io/NEFT-RTGS-BANAS/" target="_blank" rel="noopener" title="NEFT/RTGS Payment Form">
+        <span class="site-footer-icon">💳</span>
+        <span>NEFT/RTGS Form</span>
+      </a>
+    </div>
+  </footer>
+
+  <script src="en-IN.js"></script>
+  <script src="ToWords.js"></script>
+  <script>
+    const toWords = new ToWords({
+      localeCode: "en-IN",
+      converterOptions: {
+        currency: true,
+        ignoreDecimal: false,
+        ignoreZeroCurrency: false,
+        doNotAddOnly: false
+      }
+    });
+    let editingAccountId = "";
+    let lastGeneratedVoucher = null;
+
+    function readStorage(key, fallback) {
+      try {
+        const value = JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
+        if (Array.isArray(fallback)) return Array.isArray(value) ? value : fallback;
+        return value && !Array.isArray(value) && typeof value === "object" ? value : fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    function setDefaultVoucherDate() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+      document.getElementById("voucherDate").value = `${year}-${month}-${day}`;
+    }
+
+    function loadBankSetup() {
+      const setup = readStorage("bankSetup", {});
+      if (setup.bankName) document.getElementById("bankName").value = setup.bankName;
+      if (setup.preparedBy) document.getElementById("preparedBy").value = setup.preparedBy;
+      if (setup.checkedBy) document.getElementById("checkedBy").value = setup.checkedBy;
+    }
+
+    function saveBankSetup() {
+      localStorage.setItem("bankSetup", JSON.stringify({
+        bankName: document.getElementById("bankName").value,
+        preparedBy: document.getElementById("preparedBy").value,
+        checkedBy: document.getElementById("checkedBy").value
+      }));
+    }
+
+    function getNarrationTemplates() {
+      return readStorage("narrationTemplates", [])
+        .map(template => String(template || "").trim())
+        .filter(Boolean)
+        .filter((template, index, list) => list.indexOf(template) === index);
+    }
+
+    function saveNarrationTemplates(templates) {
+      localStorage.setItem("narrationTemplates", JSON.stringify(templates));
+    }
+
+    function renderNarrationTemplates() {
+      const templates = getNarrationTemplates();
+      document.getElementById("narrationTemplateSelect").innerHTML = `
+        <option value="">Select saved narration</option>
+        ${templates.map(template => `<option value="${escapeHtml(template)}">${escapeHtml(template.slice(0, 70))}</option>`).join("")}
+      `;
+    }
+
+    function saveNarrationTemplate() {
+      const narration = document.getElementById("commonNarration").value.trim();
+      if (!narration) {
+        showMessage("Enter narration before saving it as a template.");
+        return;
+      }
+
+      const templates = getNarrationTemplates();
+      if (!templates.includes(narration)) templates.push(narration);
+      saveNarrationTemplates(templates);
+      renderNarrationTemplates();
+      document.getElementById("narrationTemplateSelect").value = narration;
+      showMessage("Narration template saved.");
+    }
+
+    function applyNarrationTemplate() {
+      const narration = document.getElementById("narrationTemplateSelect").value;
+      if (narration) document.getElementById("commonNarration").value = narration;
+    }
+
+    function deleteNarrationTemplate() {
+      const selected = document.getElementById("narrationTemplateSelect").value;
+      if (!selected) {
+        showMessage("Select a narration template to delete.");
+        return;
+      }
+
+      saveNarrationTemplates(getNarrationTemplates().filter(template => template !== selected));
+      renderNarrationTemplates();
+      showMessage("Narration template deleted.");
+    }
+
+    function getAccounts() {
+      const saved = readStorage("accounts", []);
+      return saved
+        .map(account => ({
+          id: account.id || makeAccountId(account.name || "", account.no || ""),
+          name: account.name || "",
+          no: account.no || "",
+          branch: account.branch || ""
+        }))
+        .filter((account, index, list) =>
+          index === list.findIndex(item => item.name === account.name && item.no === account.no)
+        );
+    }
+
+    function saveAccounts(accounts) {
+      localStorage.setItem("accounts", JSON.stringify(accounts));
+    }
+
+    function makeAccountId(name, no) {
+      return `${encodeURIComponent(no.trim().toLowerCase())}|${encodeURIComponent(name.trim().toLowerCase())}`;
+    }
+
+    function accountDisplay(account) {
+      return `${account.name} | ${account.no} | ${account.branch}`;
+    }
+
+    function findAccountByDisplay(displayValue) {
+      return getAccounts().find(account => accountDisplay(account) === displayValue);
+    }
+
+    function renderAccountOptions() {
+      document.getElementById("accountOptions").innerHTML = getAccounts()
+        .map(account => `<option value="${escapeHtml(accountDisplay(account))}"></option>`)
+        .join("");
+    }
+
+    function saveAccount() {
+      const name = document.getElementById("accName").value.trim();
+      const no = document.getElementById("accNo").value.trim();
+      const branch = document.getElementById("accBranch").value.trim();
+      if (!name || !no || !branch) {
+        showMessage("Fill account name, number, and branch.");
+        return;
+      }
+
+      const saved = getAccounts();
+      const account = { id: editingAccountId || makeAccountId(name, no), name, no, branch };
+      const duplicate = saved.find(item => item.id !== editingAccountId && item.name === name && item.no === no);
+      if (duplicate) {
+        showMessage("This account already exists. Use Edit to update it.");
+        return;
+      }
+
+      const existingIndex = saved.findIndex(item => item.id === editingAccountId);
+      if (existingIndex >= 0) {
+        saved[existingIndex] = account;
+      } else {
+        saved.push(account);
+      }
+      saveAccounts(saved);
+      clearAccountForm();
+      renderAccountList();
+      renderAccountOptions();
+      renderEntries();
+      showMessage("");
+    }
+
+    function clearAccountForm() {
+      document.getElementById("accName").value = "";
+      document.getElementById("accNo").value = "";
+      document.getElementById("accBranch").value = "";
+      editingAccountId = "";
+      document.getElementById("accountSaveButton").textContent = "Save Account";
+      document.getElementById("accountCancelButton").style.display = "none";
+    }
+
+    function cancelAccountEdit() {
+      clearAccountForm();
+      showMessage("");
+    }
+
+    function editAccount(index) {
+      const accounts = getAccounts();
+      if (index < 0 || index >= accounts.length) return;
+      
+      const account = accounts[index];
+      editingAccountId = account.id;
+      document.getElementById("accName").value = account.name;
+      document.getElementById("accNo").value = account.no;
+      document.getElementById("accBranch").value = account.branch;
+      document.getElementById("accountSaveButton").textContent = "Update Account";
+      document.getElementById("accountCancelButton").style.display = "";
+      showMessage("");
+    }
+
+    function deleteAccount(index) {
+      const accounts = getAccounts();
+      if (index < 0 || index >= accounts.length) return;
+      
+      if (!confirm("Delete this saved account from this browser?")) return;
+
+      const accountId = accounts[index].id;
+      const saved = accounts.filter((_, i) => i !== index);
+      saveAccounts(saved);
+      if (editingAccountId === accountId) clearAccountForm();
+      renderAccountList();
+      renderAccountOptions();
+      renderEntries();
+      showMessage("");
+    }
+
+    function renderAccountList() {
+      const accounts = getAccounts();
+      if (!accounts.length) {
+        document.getElementById("accountList").innerHTML = '<div class="empty-accounts">No saved accounts yet.</div>';
+        return;
+      }
+
+      document.getElementById("accountList").innerHTML = `
+        <table class="account-list">
+          <thead>
+            <tr>
+              <th>Account Name</th>
+              <th>AC/BGL Number</th>
+              <th>Branch</th>
+              <th class="table-actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${accounts.map((account, index) => `
+              <tr>
+                <td>${escapeHtml(account.name)}</td>
+                <td>${escapeHtml(account.no)}</td>
+                <td>${escapeHtml(account.branch)}</td>
+                <td class="table-actions">
+                  <button type="button" onclick="editAccount(${index})">Edit</button>
+                  <button class="secondary" type="button" onclick="deleteAccount(${index})">Delete</button>
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function exportAccounts() {
+      const accounts = getAccounts();
+      if (!accounts.length) {
+        showMessage("No saved accounts to export.");
+        return;
+      }
+
+      downloadJson("voucher-accounts-backup.json", {
+        exportedAt: new Date().toISOString(),
+        accounts
+      });
+      showMessage("");
+    }
+
+    function importAccounts(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          const imported = Array.isArray(parsed) ? parsed : parsed.accounts;
+          if (!Array.isArray(imported)) throw new Error("Invalid account backup.");
+
+          const merged = getAccounts();
+          imported.forEach(account => {
+            const name = String(account.name || "").trim();
+            const no = String(account.no || "").trim();
+            const branch = String(account.branch || "").trim();
+            if (!name || !no || !branch) return;
+
+            const id = account.id || makeAccountId(name, no);
+            const cleanAccount = { id, name, no, branch };
+            const existingIndex = merged.findIndex(item => item.id === id || (item.name === name && item.no === no));
+            if (existingIndex >= 0) merged[existingIndex] = cleanAccount;
+            else merged.push(cleanAccount);
+          });
+
+          saveAccounts(merged);
+          renderAccountList();
+          renderAccountOptions();
+          renderEntries();
+          showMessage("Accounts imported successfully.");
+        } catch {
+          showMessage("Could not import accounts. Please select a valid backup file.");
+        } finally {
+          input.value = "";
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function renderEntries(entryData = []) {
+      const [debitCount, creditCount] = document.getElementById("voucherType").value.split("-").map(Number);
+      const entries = [];
+
+      for (let i = 0; i < debitCount; i++) entries.push("Debit");
+      for (let i = 0; i < creditCount; i++) entries.push("Credit");
+
+      document.getElementById("entries").innerHTML = entries
+        .map((type, index) => entryHTML(type, index, entryData[index]))
+        .join("");
+    }
+
+    function entryHTML(type, index, entryData = {}) {
+      const account = entryData.accountId
+        ? getAccounts().find(item => item.id === entryData.accountId)
+        : null;
+      const sample = {
+        type,
+        accountValue: account ? accountDisplay(account) : entryData.accountDisplay || "",
+        amount: entryData.amount ?? "0"
+      };
+
+      return `
+        <div class="entry" data-type="${type}">
+          <div class="entry-title">
+            <span>${type} Voucher</span>
+            <span>#${index + 1}</span>
+          </div>
+          <label>Amount
+            <input class="amount" type="number" min="0" step="0.01" value="${escapeHtml(sample.amount)}">
+          </label>
+          <label>Account
+            <input class="account" list="accountOptions" placeholder="Search by account name, number, or branch" value="${escapeHtml(sample.accountValue)}">
+          </label>
+        </div>
+      `;
+    }
+
+    function generateVoucher() {
+      const entries = [...document.querySelectorAll(".entry")].map(readEntry);
+      const debitTotal = entries
+        .filter(entry => entry.type === "Debit")
+        .reduce((sum, entry) => sum + entry.amount, 0);
+      const creditTotal = entries
+        .filter(entry => entry.type === "Credit")
+        .reduce((sum, entry) => sum + entry.amount, 0);
+
+      const errors = validateVoucher(entries, debitTotal, creditTotal);
+      if (errors.length) {
+        showMessages(errors);
+        return false;
+      }
+
+      // Filter entries to only include those with amount > 0
+      const filteredEntries = entries.filter(entry => entry.amount > 0);
+      document.getElementById("voucherOutput").innerHTML = filteredEntries.map(voucherHTML).join("") + footerHTML();
+      showMessage("");
+      savePreviousVoucher(entries);
+      return true;
+    }
+
+    function validateVoucher(entries, debitTotal, creditTotal) {
+      const errors = [];
+      const entriesWithAmount = entries.filter(e => e.amount > 0);
+      if (!entriesWithAmount.length) errors.push("At least one entry must have an amount greater than zero.");
+
+      entriesWithAmount.forEach((entry, index) => {
+        const label = `${entry.type} entry with amount`;
+        if (!entry.accountDisplay) errors.push(`${label}: select an account.`);
+        else if (!entry.accountNo || !entry.branch) errors.push(`${label}: select an account from the saved account list.`);
+      });
+
+      const voucherType = document.getElementById("voucherType").value;
+      // Only validate balance for mixed debit/credit vouchers
+      if (voucherType !== "3-0" && voucherType !== "0-3") {
+        if (roundMoney(debitTotal) !== roundMoney(creditTotal)) {
+          errors.push(`Debit total ${formatAmountIndian(debitTotal)} and credit total ${formatAmountIndian(creditTotal)} must match.`);
+        }
+      }
+
+      return errors;
+    }
+
+    function readEntry(entryNode) {
+      const accountInput = entryNode.querySelector(".account");
+      const account = findAccountByDisplay(accountInput.value.trim());
+      return {
+        type: entryNode.dataset.type,
+        accountId: account ? account.id : "",
+        accountDisplay: accountInput.value.trim(),
+        accountNo: account ? account.no : "",
+        accountName: account ? account.name : "",
+        branch: account ? account.branch : "",
+        narration: document.getElementById("commonNarration").value.trim(),
+        amount: Number(entryNode.querySelector(".amount").value || 0)
+      };
+    }
+
+    function voucherHTML(entry) {
+      const typeUpper = entry.type.toUpperCase();
+      const voucherId = entry.type === "Debit" ? "67" : "66";
+      const amount = formatAmountIndian(entry.amount);
+      const words = amountInWords(entry.amount);
+
+      return `
+        <article class="voucher">
+          <div class="voucher-head">
+            <div class="voucher-title">${typeUpper} VOUCHER</div>
+            <div class="voucher-id">N.${voucherId}</div>
+          </div>
+          <div class="voucher-line">
+            <div>AC/BGL: <b>${escapeHtml(entry.accountNo)}</b></div>
+            <div>DATE: ${formatDate(document.getElementById("voucherDate").value)}</div>
+          </div>
+          <div class="bank-name">${escapeHtml(document.getElementById("bankName").value)}</div>
+          <div class="voucher-grid">
+            <div class="voucher-cell account-cell">${typeUpper}: ${escapeHtml(entry.accountName)}</div>
+            <div class="voucher-cell branch-cell">BRANCH: ${escapeHtml(entry.branch)}</div>
+            <div class="voucher-cell narration-cell">${escapeHtml(entry.narration)}</div>
+            <div class="voucher-cell amount-cell">${amount}</div>
+            <div class="voucher-cell total-label-cell">TOTAL &#8377;:</div>
+            <div class="voucher-cell total-amount-cell">${amount}</div>
+            <div class="voucher-cell words-cell">IN WORDS &#8377;: ${escapeHtml(words)}</div>
+          </div>
+        </article>
+      `;
+    }
+
+    function footerHTML() {
+      return `
+        <div class="signature-grid">
+          <div>CLERK/CASHIER</div>
+          <div>OFFICER</div>
+        </div>
+        <div class="prepared-grid">
+          <div>Prepared By ${escapeHtml(document.getElementById("preparedBy").value)}</div>
+          <div>Checked By ${escapeHtml(document.getElementById("checkedBy").value)}</div>
+        </div>
+      `;
+    }
+
+    function savePreviousVoucher(entries) {
+      lastGeneratedVoucher = {
+        voucherDate: document.getElementById("voucherDate").value,
+        voucherType: document.getElementById("voucherType").value,
+        commonNarration: document.getElementById("commonNarration").value,
+        entries: entries.map(entry => ({
+          type: entry.type,
+          amount: entry.amount,
+          accountId: entry.accountId,
+          accountDisplay: entry.accountDisplay
+        }))
+      };
+    }
+
+    function duplicatePreviousVoucher() {
+      if (!lastGeneratedVoucher) {
+        showMessage("Generate a voucher first.");
+        return;
+      }
+
+      document.getElementById("voucherDate").value = lastGeneratedVoucher.voucherDate;
+      document.getElementById("voucherType").value = lastGeneratedVoucher.voucherType;
+      document.getElementById("commonNarration").value = lastGeneratedVoucher.commonNarration;
+      renderEntries(lastGeneratedVoucher.entries);
+      showMessage("");
+    }
+
+    function formatAmountIndian(amount) {
+      // Format amount in Indian currency format with proper grouping
+      // Right side: groups of 2 digits
+      // Left side: remaining 1-3 digits
+      // Examples: 100 → 100.00, 1000 → 1,000.00, 10000 → 10,000.00, 100000 → 1,00,000.00
+      
+      const roundedAmount = Math.round(amount * 100) / 100;
+      const [integerPart, decimalPart] = roundedAmount.toFixed(2).split('.');
+      
+      // If less than or equal to 3 digits, no grouping needed
+      if (integerPart.length <= 3) {
+        return integerPart + '.' + decimalPart;
+      }
+      
+      // Separate the last 3 digits (rightmost group in Indian system)
+      const lastThree = integerPart.slice(-3);
+      const beforeLastThree = integerPart.slice(0, -3);
+      
+      // Split the remaining part into groups of 2 from right to left
+      let groupedBefore = '';
+      for (let i = beforeLastThree.length; i > 0; i -= 2) {
+        const start = Math.max(0, i - 2);
+        if (groupedBefore) {
+          groupedBefore = beforeLastThree.slice(start, i) + ',' + groupedBefore;
+        } else {
+          groupedBefore = beforeLastThree.slice(start, i);
+        }
+      }
+      
+      // Combine the parts
+      const formatted = groupedBefore ? groupedBefore + ',' + lastThree : lastThree;
+      return formatted + '.' + decimalPart;
+    }
+
+    function roundMoney(amount) {
+      return Math.round(amount * 100) / 100;
+    }
+
+    function amountInWords(amount) {
+      try {
+        return toWords.convert(amount);
+      } catch {
+        return "ERROR";
+      }
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return "";
+      const date = new Date(dateString + "T00:00:00Z");
+      const day = String(date.getUTCDate()).padStart(2, "0");
+      const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+      const year = date.getUTCFullYear();
+      return `${day}/${month}/${year}`;
+    }
+
+    function escapeHtml(text) {
+      const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+      return String(text || "").replace(/[&<>"']/g, char => map[char]);
+    }
+
+    function jsString(text) {
+      return JSON.stringify(text);
+    }
+
+    function showMessage(message) {
+      document.getElementById("message").textContent = message;
+    }
+
+    function showMessages(messages) {
+      const html = `<ul class="validation-list">${messages.map(msg => `<li>${escapeHtml(msg)}</li>`).join("")}</ul>`;
+      document.getElementById("message").innerHTML = html;
+    }
+
+    function downloadJson(filename, data) {
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Initialize
+    setDefaultVoucherDate();
+    loadBankSetup();
+    renderNarrationTemplates();
+    renderAccountList();
+    renderAccountOptions();
+    renderEntries();
+  </script>
+</body>
+</html>
